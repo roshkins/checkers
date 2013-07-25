@@ -40,7 +40,8 @@ end
 
 class Piece
 
-  attr_reader :king, :color
+  attr_accessor :king
+  attr_reader :color
 
   def initialize(location, board, color)
     @king = false
@@ -63,7 +64,7 @@ class Piece
 
   def slide_moves
     if @king
-
+      new_locs([[-1, 1], [1, 1]] + [[-1, -1], [1, -1]], @location)
     else
       case @color
       when :red
@@ -79,7 +80,37 @@ class Piece
   end
 
   def jump_moves
-    nil
+    if @king
+        new_locs(verify_pieces_exist([[-1, 1], [1, 1]] + [[-1, -1], [1, -1]])
+        .map.with_index do |elm, idx|
+          [[-2, 2], [2, 2]] + [[-2, -2], [2, -2]][idx]
+        end, @location)
+    else
+      case @color
+      when :red
+        # when red move down board
+        # check spots up and left and up and right
+
+          new_locs(verify_pieces_exist([[-1, 1], [1, 1]])
+          .map.with_index do |elm, idx|
+            [[-2, 2], [2, 2]][idx]
+          end, @location)
+      when :black
+          new_locs(
+          verify_pieces_exist([[-1, -1], [1, -1]]).map.with_index do |elm, idx|
+          [[-2, -2], [2, -2]][idx]
+          end, @location)
+      else
+        raise "@color has invalid color"
+      end
+    end
+  end
+
+  def verify_pieces_exist(locations)
+    # returns list of locations that exist
+    locations.map do |rel_move|
+          rel_move.map.with_index { |itm, idx| @location[idx] + itm }
+        end.select { |itm| @board[*itm] }
   end
 
   def location=(loc)
@@ -109,5 +140,7 @@ if __FILE__ == $PROGRAM_NAME
   puts b.to_s
   p b[0, 0].slide_moves
   p b[0, 2].slide_moves
+  b[0, 2].location = [1, 3]
+  puts b
   p b[2, 2].slide_moves
 end
