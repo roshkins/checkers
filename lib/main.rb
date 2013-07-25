@@ -4,12 +4,28 @@ require 'colorize'
 class Checkers
   def initialize
     @board = Board.new
+
+  end
+
+  def play
     puts "Welcome to Rashi's Rocking Checkers Game"
     puts
     puts "Para espanol, oprima el dos"
     puts "Too late."
 
+    loop do
+      from_pt = ask_for_pts("Where from? enter an ordered pair, ex: 07")
+      to_pts  = ask_for_pts(\
+      "Where to? Enter as many moves as you like, separated by spaces")
+      @board[*from_pt[0]].perform_moves(to_pts)
+    end
   end
+
+  def ask_for_pts(prompt_str)
+    print "#{prompt_str} "
+    gets.split.map{ |str| str.match(/\D*(\d)\D*(\d)\D*/)[1..2].map(&:to_i) }
+  end
+
 end
 
 class Board
@@ -215,15 +231,16 @@ class InvalidMoveError < RuntimeError
 end
 
 if __FILE__ == $PROGRAM_NAME
-  b = Board.new
-  puts b
-  puts
-  # b[1, 2].perform_slide([2, 3])
-  # b[2, 3].perform_slide([3, 4])
-  b[1, 2].perform_moves([[2, 3], [3, 4]])
-
-
-  puts b.dup
-  b[2, 5].perform_jump([4, 3])
-  puts b
+  # b = Board.new
+  # puts b
+  # puts
+  # # b[1, 2].perform_slide([2, 3])
+  # # b[2, 3].perform_slide([3, 4])
+  # b[1, 2].perform_moves([[2, 3], [3, 4]])
+  #
+  #
+  # puts b.dup
+  # b[2, 5].perform_jump([4, 3])
+  # puts b
+  Checkers.new.play
 end
