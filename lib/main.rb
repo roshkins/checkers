@@ -1,5 +1,17 @@
 # encoding: UTF-8
 require 'colorize'
+
+class Checkers
+  def initialize
+    @board = Board.new
+    puts "Welcome to Rashi's Rocking Checkers Game"
+    puts
+    puts "Para espanol, oprima el dos"
+    puts "Too late."
+
+  end
+end
+
 class Board
   def initialize
     @board = Array.new(8) { Array.new(8) { nil } }
@@ -17,10 +29,11 @@ class Board
 
   def to_s
     res = ""
-    @board.each do |row|
-      res <<  row_to_s(row) * " | " << "\n--------------------------------\n"
+    res << "  " + (0..7).to_a * "   " + "\n"
+    @board.each_with_index do |row, idx|
+      res << "#{idx} " << row_to_s(row) * " | " << "\n--------------------------------\n"
     end
-    res
+    res << "\n"
   end
 
   def row_to_s (row)
@@ -122,6 +135,7 @@ class Piece
     raise InvalidMoveError.new("Not a valid move.")\
     unless possible_moves.include?(new_pos)
     self.location = new_pos
+    check_king
   end
 
   def perform_jump(new_pos)
@@ -136,9 +150,15 @@ class Piece
     unless possible_moves.include?(new_pos) && @board[*check_pos]
     @board[*check_pos] = nil
     self.location = new_pos
+    check_king
   end
 
-
+  def check_king
+    if (@color == :black && @location.last == 0) || \
+       (@color == :white && @location.last == 7)
+       @king = true
+    end
+  end
 
 
   def perform_moves(move_seq)
@@ -150,8 +170,7 @@ class Piece
   end
 
 
-
-  private
+  protected
   def perform_moves!(move_sequence)
     move_sequence.each do |move|
       begin
@@ -162,6 +181,7 @@ class Piece
     end
   end
 
+  private
   def valid_move_seq?(move_sequence)
     duped_board = @board.dup
     begin
@@ -204,7 +224,6 @@ if __FILE__ == $PROGRAM_NAME
 
 
   puts b.dup
-  p b[2, 5].jump_moves
   b[2, 5].perform_jump([4, 3])
   puts b
 end
