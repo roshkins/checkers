@@ -18,7 +18,7 @@ class Board
   def to_s
     res = ""
     @board.each do |row|
-      res << row * " ".white.on_white << "\n"
+      res << row * " " + " ".white.on_white << "\n"
     end
     res
   end
