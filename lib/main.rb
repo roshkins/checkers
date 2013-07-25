@@ -18,7 +18,7 @@ class Board
   def to_s
     res = ""
     @board.each do |row|
-      res << row * " " + " ".white.on_white << "\n"
+      res << row * " ".white.on_white << "\n"
     end
     res
   end
@@ -61,13 +61,53 @@ class Piece
     end
   end
 
+  def slide_moves
+    if @king
+
+    else
+      case @color
+      when :red
+        # when red move down board
+        # check spots up and left and up and right
+        new_locs([[-1, 1], [1, 1]], @location)
+      when :black
+        new_locs([[-1, -1], [1, -1]], @location)
+      else
+        raise "@color has invalid color"
+      end
+    end
+  end
+
+  def jump_moves
+    nil
+  end
+
   def location=(loc)
     @location && @board[*@location] = nil
     @board[*loc] = self
+    @location = loc
   end
+
+
+  private
+
+  def new_locs(relative_moves, position)
+
+    return relative_moves.map do |rel_move|
+      rel_move.map.with_index { |itm, idx| @location[idx] + itm }
+    end.select do |itm|
+          itm.all? { |loc| loc >= 0 && loc < 8 } &&
+          @board[*itm].nil?
+        end
+  end
+
+
 end
 
 if __FILE__ == $PROGRAM_NAME
   b = Board.new
   puts b.to_s
+  p b[0, 0].slide_moves
+  p b[0, 2].slide_moves
+  p b[2, 2].slide_moves
 end
