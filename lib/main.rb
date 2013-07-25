@@ -139,6 +139,19 @@ class Piece
   end
 
 
+
+
+  def perform_moves(move_seq)
+    if valid_move_seq?(move_seq)
+      perform_moves!(move_seq)
+    else
+      raise InvalidMoveError.new("Not even close to a valid move.")
+    end
+  end
+
+
+
+  private
   def perform_moves!(move_sequence)
     move_sequence.each do |move|
       begin
@@ -160,7 +173,6 @@ class Piece
     end
   end
 
-  private
   def new_locs(relative_moves, position)
 
     return relative_moves.map do |rel_move|
@@ -188,7 +200,7 @@ if __FILE__ == $PROGRAM_NAME
   puts
   # b[1, 2].perform_slide([2, 3])
   # b[2, 3].perform_slide([3, 4])
-  b[1, 2].perform_moves!([[2, 3], [3, 4]]) if b[1, 2].valid_move_seq?([[2, 3], [3, 4]])
+  b[1, 2].perform_moves([[2, 3], [3, 4]])
 
 
   puts b.dup
