@@ -29,6 +29,17 @@ class Board
     end
   end
 
+  def dup
+    b = Board.new
+      @board.each do |row|
+      row.each do |cell|
+        Piece.new(cell.location, b, cell.color) if cell
+        nil if !cell
+      end
+    end
+    b
+  end
+
   private
 
   def setup_pieces
@@ -42,12 +53,14 @@ class Board
     end
   end
 
+
+
 end
 
 class Piece
 
   attr_accessor :king
-  attr_reader :color
+  attr_reader :color, :location
 
   def initialize(location, board, color)
     @king = false
@@ -136,6 +149,16 @@ class Piece
     end
   end
 
+  def valid_move_seq?(move_sequence)
+    duped_board = @board.dup
+    begin
+      duped_board[*@location].perform_moves!(move_sequence)
+    rescue InvalidMoveError
+      return false
+    else
+      return true
+    end
+  end
 
   private
   def new_locs(relative_moves, position)
@@ -163,10 +186,12 @@ if __FILE__ == $PROGRAM_NAME
   b = Board.new
   puts b
   puts
-  b[1, 2].perform_slide([2, 3])
-  b[2, 3].perform_slide([3, 4])
+  # b[1, 2].perform_slide([2, 3])
+  # b[2, 3].perform_slide([3, 4])
+  b[1, 2].perform_moves!([[2, 3], [3, 4]]) if b[1, 2].valid_move_seq?([[2, 3], [3, 4]])
 
-  puts b
+
+  puts b.dup
   p b[2, 5].jump_moves
   b[2, 5].perform_jump([4, 3])
   puts b
