@@ -18,9 +18,15 @@ class Board
   def to_s
     res = ""
     @board.each do |row|
-      res << row * (" " +  " ".white.on_white) << "\n"
+      res <<  row_to_s(row) * " | " << "\n--------------------------------\n"
     end
     res
+  end
+
+  def row_to_s (row)
+    row.map do |cell|
+       cell ? cell : " "
+    end
   end
 
   private
@@ -110,7 +116,9 @@ class Piece
     # returns list of locations that exist
     locations.map do |rel_move|
           rel_move.map.with_index { |itm, idx| @location[idx] + itm }
-        end.select { |itm| @board[*itm] }
+        end.map do |itm|
+          @board[*itm] ? itm :  nil
+        end
   end
 
   def location=(loc)
@@ -140,7 +148,7 @@ if __FILE__ == $PROGRAM_NAME
   puts b.to_s
   p b[0, 0].slide_moves
   p b[0, 2].slide_moves
-  b[0, 2].location = [1, 3]
+  b[0, 2].location = [3, 4]
   puts b
-  p b[2, 2].slide_moves
+  p b[2, 5].jump_moves
 end
