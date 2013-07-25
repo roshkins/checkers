@@ -34,11 +34,11 @@ class Board
   def setup_pieces
     4.times do |col|
       2.times do |row|
-        Piece.new([col * 2, row * 2], self, :red)
+        Piece.new([col * 2 + 1, row * 2], self, :red)
         Piece.new([col * 2, 7 - (row * 2)], self, :black)
       end
       Piece.new([col * 2 + 1, 6], self, :black)
-      Piece.new([col * 2 + 1, 1], self, :red)
+      Piece.new([col * 2, 1], self, :red)
     end
   end
 
@@ -102,25 +102,42 @@ class Piece
       end
     end
   end
-  #
-  # def verify_pieces_exist(locations)
-  #   # returns list of locations that exist
-  #   locations.map do |rel_move|
-  #         rel_move.map.with_index { |itm, idx| @location[idx] + itm }
-  #       end.map do |itm|
-  #         @board[*itm] ? itm :  nil
-  #       end
-  # end
 
-  def location=(loc)
-    @location && @board[*@location] = nil
-    @board[*loc] = self
-    @location = loc
+
+  def perform_slide(new_pos)
+    possible_moves = slide_moves
+    raise InvalidMoveError.new("Not a valid move.")\
+    unless possible_moves.include?(new_pos)
+    self.location = new_pos
+  end
+
+  def perform_jump(new_pos)
+    possible_moves = jump_moves
+    #check_pos calculates the position between the possible jump place
+    check_pos = \
+    [(new_pos.first - @location.first) / 2 + @location.first,\
+     (new_pos.last  - @location.last)  / 2 + @location.last]
+
+
+    raise InvalidMoveError.new("Not a valid move.")\
+    unless possible_moves.include?(new_pos) && @board[*check_pos]
+    @board[*check_pos] = nil
+    self.location = new_pos
+  end
+
+
+  def perform_moves!(move_sequence)
+    move_sequence.each do |move|
+      begin
+        perform_slide(move)
+      rescue InvalidMoveError
+        perform_jump(move)
+      end
+    end
   end
 
 
   private
-
   def new_locs(relative_moves, position)
 
     return relative_moves.map do |rel_move|
@@ -131,15 +148,26 @@ class Piece
         end
   end
 
+  def location=(loc)
+    @location && @board[*@location] = nil
+    @board[*loc] = self
+    @location = loc
+  end
 
+end
+
+class InvalidMoveError < RuntimeError
 end
 
 if __FILE__ == $PROGRAM_NAME
   b = Board.new
-  puts b.to_s
-  p b[0, 0].slide_moves
-  p b[0, 2].slide_moves
-  b[0, 2].location = [3, 4]
+  puts b
+  puts
+  b[1, 2].perform_slide([2, 3])
+  b[2, 3].perform_slide([3, 4])
+
   puts b
   p b[2, 5].jump_moves
+  b[2, 5].perform_jump([4, 3])
+  puts b
 end
