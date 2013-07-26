@@ -1,4 +1,5 @@
 # encoding: UTF-8
+require 'debugger'
 require 'colorize'
 
 class Checkers
@@ -14,21 +15,31 @@ class Checkers
     puts "Too late."
 
     loop do
-      from_pt = ask_for_pts("Where from? enter an ordered pair, ex: 07")
-      to_pts  = ask_for_pts(\
-      "Where to? Enter as many moves as you like, separated by spaces")
-      @board[*from_pt[0]].perform_moves(to_pts)
+      puts @board
+      begin
+        from_pt = ask_for_pts("Where from? enter an ordered pair, ex: 07")
+        to_pts  = ask_for_pts(\
+        "Where to? Enter as many moves as you like, separated by spaces")
+        @board[*from_pt[0]].perform_moves(to_pts)
+      rescue RuntimeError => e
+        puts "Error: #{e.message}"
+        retry
+      end
+
     end
   end
 
   def ask_for_pts(prompt_str)
     print "#{prompt_str} "
     gets.split.map{ |str| str.match(/\D*(\d)\D*(\d)\D*/)[1..2].map(&:to_i) }
+    raise ""
   end
 
 end
 
+
 class Board
+  include Enumerable
   def initialize
     @board = Array.new(8) { Array.new(8) { nil } }
     setup_pieces
@@ -47,7 +58,8 @@ class Board
     res = ""
     res << "  " + (0..7).to_a * "   " + "\n"
     @board.each_with_index do |row, idx|
-      res << "#{idx} " << row_to_s(row) * " | " << "\n--------------------------------\n"
+      res << "#{idx} " << row_to_s(row) * " | "\
+       << "\n--------------------------------\n"
     end
     res << "\n"
   end
@@ -69,6 +81,21 @@ class Board
     b
   end
 
+  def each
+    @board.each do |row|
+      row.each do |cell|
+
+        yield(cell)
+      end
+    end
+  end
+
+  def jump_pos_available?
+    self.any? do |item|
+      (item) ? item.jump_pos_available? : false
+      end
+  end
+
   private
 
   def setup_pieces
@@ -81,8 +108,6 @@ class Board
       Piece.new([col * 2, 1], self, :red)
     end
   end
-
-
 
 end
 
@@ -136,9 +161,9 @@ class Piece
         # when red move down board
         # check spots up and left and up and right
 
-          new_locs([[-2, 2], [2, 2]], @location)
+           new_locs([[-2, 2], [2, 2]], @location)
       when :black
-          new_locs([[-2, -2], [2, -2]], @location)
+           new_locs([[-2, -2], [2, -2]], @location)
       else
         raise "@color has invalid color"
       end
@@ -185,17 +210,41 @@ class Piece
     end
   end
 
+  def jump_pos_available?
+
+    possible_moves = jump_moves
+    # debugger if possible_moves.length > 0
+    possible_moves.map! do |move|
+      check_pos = \
+      [(move.first - @location.first) / 2 + @location.first,\
+       (move.last  - @location.last)  / 2 + @location.last]
+       if @board[*check_pos] && @board[*check_pos].color != @color
+         move
+       else
+         nil
+       end
+    end
+    debugger if possible_moves.compact.length > 0
+    possible_moves.compact.length > 0
+  end
 
   protected
   def perform_moves!(move_sequence)
     move_sequence.each do |move|
-      begin
-        perform_slide(move)
-      rescue InvalidMoveError
+      unless @board.jump_pos_available?
+        begin
+          perform_slide(move)
+        rescue InvalidMoveError
+          perform_jump(move)
+        end
+      else
+
         perform_jump(move)
       end
     end
   end
+
+
 
   private
   def valid_move_seq?(move_sequence)
@@ -231,16 +280,6 @@ class InvalidMoveError < RuntimeError
 end
 
 if __FILE__ == $PROGRAM_NAME
-  # b = Board.new
-  # puts b
-  # puts
-  # # b[1, 2].perform_slide([2, 3])
-  # # b[2, 3].perform_slide([3, 4])
-  # b[1, 2].perform_moves([[2, 3], [3, 4]])
-  #
-  #
-  # puts b.dup
-  # b[2, 5].perform_jump([4, 3])
-  # puts b
+
   Checkers.new.play
 end
